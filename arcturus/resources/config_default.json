@@ -1,0 +1,10 @@
+{
+    "site": "e621",
+    "lastrun_date": "2017-01-01",
+    "lastrun_ignored": false,
+    "taglist_file": "taglist.txt",
+    "blacklist_file": "blacklist.txt",
+    "blacklist_ignored": false,
+    "download_dir": null,
+    "download_nameformat": "$artist_$md5.$ext"
+}

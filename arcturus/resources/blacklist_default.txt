@@ -1,0 +1,4 @@
+# arcturus blacklist file
+# 
+# instructions:
+# TODO

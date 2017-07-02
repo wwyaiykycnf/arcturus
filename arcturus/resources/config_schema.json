@@ -1,0 +1,101 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {},
+    "id": "http://example.com/example.json",
+    "properties": {
+        "advanced_cache": {
+            "default": ".cache",
+            "description": "advanced/debug setting: the path to the cache file containing already-downloaded filenames",
+            "id": "http://example.com/example.json/properties/advanced_cache",
+            "title": "cache file",
+            "type": "string"
+        },
+        "advanced_duplicates": {
+            "default": false,
+            "description": "advanced/debug setting: set this to true to disable duplicate detection",
+            "id": "http://example.com/example.json/properties/advanced_duplicates",
+            "title": "duplicate downloads",
+            "type": "boolean"
+        },
+        "advanced_threads": {
+            "default": 1,
+            "description": "advanced/debug setting: number of threads to use for filtering and downloading.  set to 1 to disable multithreading",
+            "id": "http://example.com/example.json/properties/advanced_threads",
+            "maximum": 8,
+            "minimum": 1,
+            "title": "thread count",
+            "type": "integer"
+        },
+        "blacklist_file": {
+            "default": "blacklist.txt",
+            "description": "blacklist file to use when downloading",
+            "id": "http://example.com/example.json/properties/blacklist_file",
+            "title": "blacklist path",
+            "type": "string"
+        },
+        "blacklist_ignored": {
+            "default": false,
+            "description": "when set to true, all blacklist functionality is disabled",
+            "id": "http://example.com/example.json/properties/blacklist_ignored",
+            "title": "disable blacklist functionality",
+            "type": "boolean"
+        },
+        "download_dir": {
+            "default": "downloads",
+            "description": "all files downloaded will be placed in this folder",
+            "id": "http://example.com/example.json/properties/download_dir",
+            "title": "downloads folder",
+            "type": "string"
+        },
+        "download_nameformat": {
+            "default": "$artist_$md5.$ext",
+            "description": "this setting describes how downloaded files should be named",
+            "id": "http://example.com/example.json/properties/download_nameformat",
+            "title": "name format for downloads",
+            "type": "string"
+        },
+        "lastrun_date": {
+            "default": "2017-01-01",
+            "description": "this is the date that the program was last run.   posts older than this will not be downloaded. must match this format: YYYY-MM-DD",
+            "id": "http://example.com/example.json/properties/lastrun_date",
+            "pattern": "\\d{4}-\\d{2}-\\d{2}",
+            "title": "last run date",
+            "type": "string"
+        },
+        "lastrun_ignored": {
+            "default": false,
+            "description": "when set to true, all items will be downloaded regardless of upload date. ",
+            "id": "http://example.com/example.json/properties/lastrun_ignored",
+            "title": "ignore last run date",
+            "type": "boolean"
+        },
+        "site": {
+            "default": "e621",
+            "description": "the site from which to download.  only e621 is supported at this point",
+            "enum": [
+                "e621"
+            ],
+            "id": "http://example.com/example.json/properties/site",
+            "title": "download site",
+            "type": "string"
+        },
+        "taglist_file": {
+            "default": "taglist.txt",
+            "description": "path to the file containing the list of terms to search for",
+            "id": "http://example.com/example.json/properties/taglist_file",
+            "title": "taglist path",
+            "type": "string"
+        }
+    },
+    "required": [
+        "blacklist_file",
+        "blacklist_ignored",
+        "lastrun_date",
+        "lastrun_ignored",
+        "download_dir",
+        "download_nameformat",
+        "site",
+        "taglist_file"
+    ],
+    "type": "object"
+}
