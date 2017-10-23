@@ -10,7 +10,21 @@ import logging.handlers
 import pathlib
 import os
 import ctypes
+import argparse
 from shutil import copyfile
+
+DEFAULT_CONFIG_NAME = 'config.json'
+DEFAULT_TAGLIST_NAME = ''
+
+
+def get_cli_args(program: str, version: str) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog=program)
+    parser.add_argument('--version', action='version', version=f"{program} {version}")
+    parser.add_argument('--config', default=DEFAULT_CONFIG_NAME,
+                        help=f"specify custom config file (default={DEFAULT_CONFIG_NAME})")
+    parser.add_argument('--debug', action="store_true", default=False,
+                        help="log debug output to terminal")
+    return parser.parse_args()
 
 def get_config() -> dict:
     """read and parse the user config.
@@ -22,28 +36,27 @@ def get_config() -> dict:
     """
     log = logging.getLogger("get_config")
     try:
-        with open('config.json') as infile:
-            log.debug("config.json (raw file before parsing):")
+        with open(DEFAULT_CONFIG_NAME) as infile:
+            log.debug(f"{DEFAULT_CONFIG_NAME} (raw file before parsing):")
             for line in infile:
                 log.debug(line.rstrip())
-        config = json.load(open("config.json"))
 
     except FileNotFoundError:
-        shutil.copyfile(src="arcturus/resources/config_default.json", dst="config.json")
-        log.fatal("config.json was missing and has been created.  please inspect the generated file and try again")
-        exit(-1)
+        shutil.copyfile(src="arcturus/resources/config_default.json", dst=DEFAULT_CONFIG_NAME)
+        log.warning(f"{DEFAULT_CONFIG_NAME} was missing and has been created from defaults")
 
+    config = json.load(open(DEFAULT_CONFIG_NAME))
     schema = json.load(open("arcturus/resources/config_schema.json"))
     clean_config = validate_json_supply_defaults(obj=config, schema=schema)
 
-    log.info("config.json contents (parsed and validated, with all fields):")
+    log.debug(f"{DEFAULT_CONFIG_NAME} contents (parsed and validated, with all fields):")
     for key, val in clean_config.items():
-        log.info("    {:<24} {}".format(key+':', val))
+        log.debug("    {:<24} {}".format(key+':', val))
 
     return clean_config
 
 
-def setup_logging():
+def setup_logging(debug_output: bool):
     """
     sets up logging so messages with error and higher go to console but all levels log to rotating files
     :return:
@@ -52,13 +65,15 @@ def setup_logging():
     # the log file will use all settings applied to the root_logger
     root_logger = logging.getLogger('')
     root_logger.setLevel(logging.DEBUG)
-    root_formatter = logging.Formatter(fmt='%(asctime)s %(name)-21s %(levelname)-8s %(message)s',
+    root_formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d %(name)-21s %(levelname)-8s %(message)s',
                                        datefmt='%Y-%m-%d %H:%M:%S')
 
     # define a Handler which writes ERROR messages or higher to the sys.stderr
     console = logging.StreamHandler()
-    console.setLevel(logging.ERROR)
-    console.setFormatter(logging.Formatter('%(name)-21s: %(levelname)-8s %(message)s'))  # simpler format for console
+    console_level = logging.DEBUG if debug_output else logging.ERROR
+    console.setLevel(console_level)
+    console.setFormatter(logging.Formatter('%(asctime)s.%(msecs)03d %(name)-15s: %(levelname)-8s %(message)s',
+                         datefmt='%H:%M:%S'))  # simpler format for console
     root_logger.addHandler(console)
 
     # create the log/ directory if needed
@@ -121,13 +136,13 @@ def validate_json_supply_defaults(obj, schema):
     # DefaultValidatingDraft4Validator(schema).validate(obj)
 
 
-def create_file(file_name: str, file_desc: str, default=None) -> bool:
+def file_exists(file_name: str, file_desc: str, default=None) -> bool:
 
-    log = logging.getLogger('create_file')
+    log = logging.getLogger('file_exists')
     file_path = pathlib.Path(file_name)
 
     if file_path.exists() and file_path.is_file():
-        log.debug(f"located {file_desc} at {str(file_path)}")
+        log.debug(f"located file_desc {file_desc} from file_name {str(file_path)}")
         return True
 
     else:  # we need to make the file
@@ -154,13 +169,13 @@ def prepare_env(cfg) -> bool:
 
     # always create download dir
     os.makedirs(cfg['download_dir'], exist_ok=True)
-    log.debug(f"created download_dir at {cfg['download_dir']}")
+    log.debug(f"download_dir is {cfg['download_dir']}")
 
     success = True
 
     # if taglist is not there, create it and then terminate
     key = 'taglist_file'
-    if not create_file(file_desc=key, file_name=cfg[key], default='arcturus/resources/taglist_default.txt'):
+    if not file_exists(file_desc=key, file_name=cfg[key], default='arcturus/resources/taglist_default.txt'):
         log.critical(f"{key} '{cfg[key]}' was not found and has been created from defaults")
         log.critical(f"try editing the file then running this program again")
         success = False
@@ -168,12 +183,14 @@ def prepare_env(cfg) -> bool:
     # if using a blacklist, create if it if needed (no need to terminate in this case)
     if not cfg['blacklist_ignored']:
         key = 'blacklist_file'
-        create_file(file_desc=key, file_name=cfg[key], default='arcturus/resources/blacklist_default.txt')
+        file_exists(file_desc=key, file_name=cfg[key], default='arcturus/resources/blacklist_default.txt')
+    else:
+        log.debug('blacklist ignored')
 
     # if cache is enabled, create it if needed (not need to terminate in this case).  also hide this file
     if not cfg['advanced_duplicates']:
         key = 'advanced_cache'
-        create_file(file_desc=key, file_name=cfg[key])
+        file_exists(file_desc=key, file_name=cfg[key])
         if os.name == 'nt':
             file_attribute_hidden = 0x02
             ret = ctypes.windll.kernel32.SetFileAttributesW(cfg[key], file_attribute_hidden)

@@ -3,24 +3,45 @@
 
 import logging
 import traceback
+import requests
 
 from . import startup
 
-def main():
-    # prepare the logging
-    startup.setup_logging()
-    main_log = logging.getLogger('root')
+PROG = "arcturus"
 
-    main_log.debug(">>> arcturus has started")
+MAJOR = 0
+MINOR = 0
+PATCH = 1
+
+VERSION = f"{MAJOR}.{MINOR}.{PATCH}"
+
+def main():
+    # read in command line arguments, if present
+    args = startup.get_cli_args(PROG, VERSION)
+
+    # set up logging to file and to console
+    startup.setup_logging(args.debug)
+    log = logging.getLogger()
+    log.debug(">>> arcturus has started")
 
     # open and parse config
     config = startup.get_config()
+    config.update(args.__dict__)
 
     # create all necessary files and directories
     if not startup.prepare_env(config):
         return
 
-    run_program(config)
+    log.debug(">>> arcturus initialization done")
+    try:
+        run_program(config)
+    except Exception as err:
+        log.fatal(">>> o shit waddup, here come dat exception")
+        log.fatal(err, exc_info=1)
+
+    log.debug(">>> arcturus has ended")
+
+
 
 def run_program(config):
     print("hello")
