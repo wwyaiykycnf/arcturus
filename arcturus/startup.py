@@ -15,6 +15,7 @@ from shutil import copyfile
 
 DEFAULT_CONFIG_NAME = 'config.json'
 DEFAULT_TAGLIST_NAME = ''
+DEFAULT_CACHE_NAME = '.cache'
 
 
 def get_cli_args(program: str, version: str) -> argparse.Namespace:
@@ -187,13 +188,11 @@ def prepare_env(cfg) -> bool:
     else:
         log.debug('blacklist ignored')
 
-    # if cache is enabled, create it if needed (not need to terminate in this case).  also hide this file
-    if not cfg['advanced_duplicates']:
-        key = 'advanced_cache'
-        file_exists(file_desc=key, file_name=cfg[key])
-        if os.name == 'nt':
-            file_attribute_hidden = 0x02
-            ret = ctypes.windll.kernel32.SetFileAttributesW(cfg[key], file_attribute_hidden)
+    # create cache if needed (not need to terminate in this case).  also hide this file
+    file_exists(file_desc='cache', file_name=DEFAULT_CACHE_NAME)
+    if os.name == 'nt':  # set the hidden flag if running on wandows
+        file_attribute_hidden = 0x02
+        ret = ctypes.windll.kernel32.SetFileAttributesW(cfg[key], file_attribute_hidden)
 
     return success
 

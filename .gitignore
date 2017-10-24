@@ -2,7 +2,7 @@
 log/
 config.json
 EnvArcturus
-.cachefile
+.cache
 *.txt
 *.json
 

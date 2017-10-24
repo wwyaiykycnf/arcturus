@@ -7,7 +7,6 @@
     "blacklist_ignored": false,
     "download_dir": "downloads",
     "download_nameformat": "$artist_$md5.$ext",
-    "advanced_cache": ".cachefile",
-    "advanced_duplicates": false,
-    "advanced_threads": 1
+    "cache_ignored": false,
+    "download_threads": 1
 }
