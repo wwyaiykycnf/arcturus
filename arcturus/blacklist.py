@@ -3,7 +3,7 @@
 import typing
 
 
-class Filter:
+class Blacklist:
     """
     this class is used to check if posts may be downloaded
 
@@ -14,6 +14,9 @@ class Filter:
     def __init__(self, blacklist: typing.List[str]):
         self.blacklist = blacklist
         self.parsed_lines = {}
+
+    def __len__(self):
+        return len(self.blacklist)
 
     def is_blacklisted(self, tags: typing.List[str]) -> bool:
         """

@@ -5,6 +5,7 @@ EnvArcturus
 .cache
 *.txt
 *.json
+.idea/
 
 # ignores for included libraries
 .cache/

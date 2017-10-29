@@ -1,7 +1,7 @@
 # coding=utf-8
 import datetime
 import abc
-from .blacklist import Filter
+from .blacklist import Blacklist
 from typing import List
 
 
@@ -33,11 +33,11 @@ class Source(abc.ABC):
     @abc.abstractmethod
     def __init__(self,
                  date: datetime.date = datetime.date.min,
-                 blacklist: Filter = Filter([]),
+                 blacklist: Blacklist = Blacklist([]),
                  username=None,
                  password=None):
         pass
 
     @abc.abstractmethod
-    def get_posts(self, query: str, blacklist: filter = Filter) -> List[Post]:
+    def get_posts(self, query: str, blacklist: filter = Blacklist) -> List[Post]:
         pass
