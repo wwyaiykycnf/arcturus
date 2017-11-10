@@ -11,14 +11,14 @@ class Blacklist:
     line of the blacklist).
     """
 
-    def __init__(self, blacklist: typing.List[str]):
+    def __init__(self, blacklist: typing.Iterable[str]):
         self.blacklist = blacklist
         self.parsed_lines = {}
 
     def __len__(self):
         return len(self.blacklist)
 
-    def is_blacklisted(self, tags: typing.List[str]) -> bool:
+    def is_blacklisted(self, tags: typing.Iterable[str]) -> bool:
         """
         check an item's attributes and return True or False indicating whether it is allowed based on the blacklist
         :param tags:  the list of all attributes for an item as a list of strings
@@ -37,7 +37,7 @@ class Blacklist:
 
         return False  # nothing in the blacklist prevented it from being shown, so it is allowed
 
-    def __parse_terms(self, blacklist_line: str) -> {"pos": set(), "meta": set(), "neg": set()}:
+    def __parse_terms(self, blacklist_line: str) -> typing.Dict[str, set]:
         """
         converts one line of the blacklist into a dict containing the terms and their types
 
