@@ -18,12 +18,6 @@ NAME = "arcturus"
 PYTHON_REQUIRED_MAJOR = 3
 PYTHON_REQUIRED_MINOR = 6
 
-MAJOR = 0
-MINOR = 1
-PATCH = 3
-
-VERSION = f"{MAJOR}.{MINOR}.{PATCH}"
-
 
 class ArcturusError(Exception):
     """base exception class for all Arcturus exceptions"""

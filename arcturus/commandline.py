@@ -11,7 +11,8 @@ from pathlib import Path
 from shutil import copyfile
 from typing import Optional
 
-from . import ArcturusCore
+from .ArcturusCore import NAME
+from .version import VERSION
 from .config import get_config
 
 CONFIG_JSON_NAME = 'config.json'
@@ -159,9 +160,10 @@ def prepare_filesystem(config: dict) -> bool:
 
 def startup_program() -> {bool, argparse.Namespace, dict}:
     # read in command line arguments, if present
-    args = get_cli_args(program=ArcturusCore.NAME, version=ArcturusCore.VERSION)
+    args = get_cli_args(program=NAME, version=VERSION)
 
     # get logs started
+    # noinspection PyUnresolvedReferences
     setup_logging(debug_output=args.debug)
     log = logging.getLogger()
 
