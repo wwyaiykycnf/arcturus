@@ -13,7 +13,7 @@ from pathlib import Path
 
 from .blacklist import Blacklist
 
-NAME = "arcturus"
+NAME = "Arcturus"
 
 PYTHON_REQUIRED_MAJOR = 3
 PYTHON_REQUIRED_MINOR = 6
@@ -121,7 +121,4 @@ class ArcturusCore:
                 handle.write(chunk)
 
     def download(self):
-        pass
-
-    def update_lastrun(self):
         pass
