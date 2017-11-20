@@ -1,17 +1,20 @@
 # coding=utf-8
 
-import logging
-import io
-import datetime
 import abc
-import requests
-
-from typing import Optional, Iterable
+import datetime
+import io
+import logging
+from pathlib import Path
 from queue import Queue
 from string import Template
-from pathlib import Path
+from typing import Optional, Iterable
 
-from .blacklist import Blacklist
+import requests
+
+import arcturus.ArcturusSources.Source as Source
+from .import ArcturusSources
+from .Blacklist import Blacklist
+from .Post import Post
 
 NAME = "Arcturus"
 
@@ -21,45 +24,6 @@ PYTHON_REQUIRED_MINOR = 6
 
 class ArcturusError(Exception):
     """base exception class for all Arcturus exceptions"""
-
-
-class Post:
-    def __init__(self, url: str, tags: Optional[Iterable[str]], uid: str, ext: str):
-        self._url = url
-        self._tags = tags
-        self._uid = uid
-        self._ext = ext
-
-    @property
-    def url(self):
-        return self._url
-
-    @property
-    def tags(self):
-        return self._tags
-
-    @property
-    def uid(self):
-        return self._uid
-
-    @property
-    def ext(self):
-        return self._ext
-
-
-class Source(abc.ABC):
-    @abc.abstractmethod
-    def __init__(self,
-                 date: Optional[datetime.date],
-                 blacklist: Optional[Blacklist],
-                 username: Optional[str],
-                 password: Optional[str]):
-        pass
-
-    @abc.abstractmethod
-    def get_posts(self, query: str) -> Iterable[Post]:
-        pass
-
 
 class ArcturusCore:
     """central class of the program which takes configuration information and downloads from a data source"""

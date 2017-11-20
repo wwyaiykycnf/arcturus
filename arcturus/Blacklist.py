@@ -16,7 +16,7 @@ class Blacklist:
         self.parsed_lines = {}
 
     def __len__(self):
-        return len(self.blacklist)
+        return sum(1 for _ in self.blacklist)
 
     def is_blacklisted(self, tags: typing.Iterable[str]) -> bool:
         """

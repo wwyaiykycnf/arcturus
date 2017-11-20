@@ -2,7 +2,7 @@
 """tests for blacklist logic"""
 
 # noinspection PyUnresolvedReferences,PyPep8
-from arcturus.blacklist import Blacklist
+from arcturus.Blacklist import Blacklist
 
 all_posts = [
     ['a'], ['b'], ['c'], ['d'], ['e'], ['f'],

@@ -9,6 +9,7 @@ from jsonschema import Draft4Validator, validators
 import json
 import shutil
 import logging
+from .ArcturusSources import get_by_name
 
 
 def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
@@ -37,6 +38,12 @@ def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
     log.debug(f"{config_json_path} contents (parsed and validated, with all fields):")
     for key, val in clean_config.items():
         log.debug("    {:<24} {}".format(key + ':', val))
+
+    try:
+        site_key = clean_config['site']
+        clean_config['site'] = get_by_name(site_key)
+    except ImportError as err:
+        raise ImportError(f"Could not import module {site_key}") from err
 
     return clean_config
 

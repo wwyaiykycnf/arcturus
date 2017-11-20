@@ -1,5 +1,6 @@
 # Arcturus-specific files:
 log/
+downloads/
 config.json
 EnvArcturus
 .cache
