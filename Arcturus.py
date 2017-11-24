@@ -8,7 +8,7 @@ from arcturus.ArcturusCore import PYTHON_REQUIRED_MAJOR, PYTHON_REQUIRED_MINOR
 
 if __name__ == '__main__':
     if sys.version_info[0] >= PYTHON_REQUIRED_MAJOR and sys.version_info[1] >= PYTHON_REQUIRED_MINOR:
-        import arcturus.commandline as commandline
+        import arcturus.cli as commandline
 
         commandline.main()
     else:

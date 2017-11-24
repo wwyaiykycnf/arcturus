@@ -3,6 +3,6 @@
 
 MAJOR = 0
 MINOR = 1
-PATCH = 5
+PATCH = 6
 
 VERSION = f"{MAJOR}.{MINOR}.{PATCH}"

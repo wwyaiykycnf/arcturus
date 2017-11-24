@@ -20,7 +20,7 @@ def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
 
     :returns: validated json object.  all non-required properties in the schema will be filled in with defaults
     """
-    log = logging.getLogger("get_config")
+    log = logging.getLogger()
     try:
         with open(config_json_path) as infile:
             log.debug(f"{config_json_path} (raw file before parsing):")
@@ -41,7 +41,7 @@ def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
 
     try:
         site_key = clean_config['site']
-        clean_config['site'] = get_by_name(site_key)
+        clean_config['site'] = clean_config['site'] # get_by_name(site_key)
     except ImportError as err:
         raise ImportError(f"Could not import module {site_key}") from err
 
