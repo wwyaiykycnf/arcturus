@@ -6,11 +6,11 @@ without filling in default values where applicable
 this stuff isn't pretty, but it should be fairly stable.
 """
 from jsonschema import Draft4Validator, validators
+from .ArcturusCore import NAME
 import json
 import shutil
 import logging
-from .ArcturusSources import get_by_name
-
+import importlib
 
 def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
     """read and parse the user config.
@@ -39,11 +39,14 @@ def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
     for key, val in clean_config.items():
         log.debug("    {:<24} {}".format(key + ':', val))
 
+    site_key = clean_config['site']
+
+    # from .ArcturusSources import site_key
     try:
-        site_key = clean_config['site']
-        clean_config['site'] = clean_config['site'] # get_by_name(site_key)
-    except ImportError as err:
-        raise ImportError(f"Could not import module {site_key}") from err
+        clean_config['site'] = importlib.import_module(f'.ArcturusSources.{site_key}', __package__)
+    except ModuleNotFoundError as err:
+        log.fatal(f"site '{site_key}' is not supported by {NAME}", exc_info=True)
+        raise err
 
     return clean_config
 
