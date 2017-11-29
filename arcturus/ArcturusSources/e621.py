@@ -17,3 +17,7 @@ class E621(abc.ABC):
 
     def get_posts(self, query: str) -> typing.Iterable[Post]:
         pass
+
+    def _get_page(self, query: str, page_num: int):
+        pass
+    

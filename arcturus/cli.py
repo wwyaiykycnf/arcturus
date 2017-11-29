@@ -7,11 +7,15 @@ import logging
 import logging.handlers
 import os
 import pathlib
+import pickle
+
 from pathlib import Path
 from shutil import copyfile
 from typing import Optional
+from datetime import datetime
 
-from .ArcturusCore import NAME
+from .ArcturusCore import NAME, ArcturusCore
+from .Blacklist import Blacklist
 from .version import VERSION
 from .config import get_config
 
@@ -198,20 +202,56 @@ def startup() -> {bool, argparse.Namespace, dict}:
     return ready_to_start, args, config
 
 
-def run(ready, args, config):
+def run(args, config):
     log = logging.getLogger()
-    if ready:
-        try:
-            print("hello")
 
-        except Exception as err:
-            log.fatal(">>> o shit waddup, here come dat exception")
-            log.fatal(err, exc_info=1)
+    try:
+        taglist = [x.strip() for x in open(config["taglist_file"]).readlines()]
+    except FileNotFoundError:
+        taglist = None
 
+    blacklist = None
+
+    if config.get("blacklist_ignored", False):
+        with open(config["blacklist_file"]) as fp:
+            blacklist = Blacklist([x.strip() for x in fp.readlines()])
+
+    cache = None
+    if config.get("cache_ignored", False):
+        with open(DEFAULT_CACHE_NAME) as fp:
+            cache = pickle.load(fp)
+
+    lastrun = None
+    if config.get("lastrun_ignored", False):
+        lastrun = datetime.date(datetime.strptime(config["lastrun_date"], '%Y-%m-%d'))
+
+    core = ArcturusCore(
+        source=config["site"],
+        taglist=taglist,
+        download_dir=config["download_dir"],
+        lastrun=lastrun,
+        blacklist=blacklist,
+        cache=cache
+    )
+    log.debug(f"core created")
+
+
+
+
+def teardown():
+    log = logging.getLogger()
     log.debug(">>> arcturus has ended")
 
 
 def main():
     (ready, args, config) = startup()
 
-    run(ready, args, config)
+    if ready:
+        try:
+            run(args, config)
+        except Exception as err:
+            log = logging.getLogger()
+            log.fatal(">>> o shit waddup, here come dat exception")
+            log.fatal(err, exc_info=1)
+
+    teardown()

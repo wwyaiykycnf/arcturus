@@ -8,6 +8,7 @@ from pathlib import Path
 from queue import Queue
 from string import Template
 from typing import Optional, Iterable
+from multiprocessing import Pool
 
 import requests
 
@@ -29,7 +30,7 @@ class ArcturusCore:
     """central class of the program which takes configuration information and downloads from a data source"""
 
     def __init__(self,
-                 src: Source,
+                 source: Source,
                  taglist: Iterable[str],
                  download_dir: Path,
                  lastrun: Optional[datetime.date],
@@ -39,7 +40,7 @@ class ArcturusCore:
                  ):
 
         # required args
-        self._src = src
+        self._source = source
         self._taglist = taglist
         self._download_dir = download_dir
 
@@ -47,8 +48,8 @@ class ArcturusCore:
         self._lastrun = lastrun
         self._blacklist = blacklist
         self._cache = cache
-        self._threads = kwargs.get('download_threads', default=4)
-        self._nameformat = kwargs.get('download_nameformat', default="$artist_$uid.$ext")
+        self._threads = kwargs.get('download_threads', 4)
+        self._nameformat = kwargs.get('download_nameformat', "${artist}_${md5}.${ext}")
         self._kwargs = kwargs
 
         self._log = logging.getLogger()
@@ -59,20 +60,25 @@ class ArcturusCore:
 
     def _get_posts_unfiltered(self):
         for line in self._taglist:
-            for post in self._src.get_posts(query=line):
+            for post in self._source.get_posts(query=line):
                 yield post
 
     def _get_posts_filtered(self):
         for line in self._taglist:
-            for post in self._src.get_posts(query=line):
+            for post in self._source.get_posts(query=line):
                 if not self._blacklist.is_blacklisted(post.tags):
                     yield post
 
     def get_posts(self):
-        for post in self._update_method():
-            if self._cache and post.uid in self._cache:
-                continue
-            else:
+        if self._cache:
+            for post in self._update_method():
+                if post.md5 in self._cache:
+                    continue
+                else:
+                    self._pending_downloads.put(post)
+
+        else:  # no cache.  just download it all
+            for post in self._update_method():
                 self._pending_downloads.put(post)
 
     def _download_single(self, post: Post):
@@ -84,5 +90,9 @@ class ArcturusCore:
             if chunk:  # filter out keep-alive new chunks
                 handle.write(chunk)
 
-    def download(self):
-        pass
+    def _print_post(self, post: Post):
+        print(post.url)
+
+    def download(self, namefmt: Optional[str]):
+        p = Pool(1)
+        p.map(self._print_post, self._pending_downloads)

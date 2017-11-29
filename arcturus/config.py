@@ -35,10 +35,6 @@ def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
     schema = json.load(open(config_json_schema))
     clean_config = validate_json_supply_defaults(obj=config, schema=schema)
 
-    log.debug(f"{config_json_path} contents (parsed and validated, with all fields):")
-    for key, val in clean_config.items():
-        log.debug("    {:<24} {}".format(key + ':', val))
-
     site_key = clean_config['site']
 
     # from .ArcturusSources import site_key
@@ -47,6 +43,10 @@ def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
     except ModuleNotFoundError as err:
         log.fatal(f"site '{site_key}' is not supported by {NAME}", exc_info=True)
         raise err
+
+    log.debug(f"{config_json_path} contents (parsed and validated, with all fields):")
+    for key, val in clean_config.items():
+        log.debug("    {:<24} {}".format(key + ':', val))
 
     return clean_config
 
