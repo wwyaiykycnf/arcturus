@@ -18,6 +18,7 @@ from .ArcturusCore import NAME, ArcturusCore
 from .Blacklist import Blacklist
 from .version import VERSION
 from .config import get_config
+from .Taglist import Taglist
 
 CONFIG_JSON_NAME = 'config.json'
 CONFIG_SCHEMA_NAME = 'arcturus/resources/config_schema.json'
@@ -205,13 +206,9 @@ def startup() -> {bool, argparse.Namespace, dict}:
 def run(args, config):
     log = logging.getLogger()
 
-    try:
-        taglist = [x.strip() for x in open(config["taglist_file"]).readlines()]
-    except FileNotFoundError:
-        taglist = None
+    taglist = Taglist.factory(open(config["taglist_file"]))
 
     blacklist = None
-
     if config.get("blacklist_ignored", False):
         with open(config["blacklist_file"]) as fp:
             blacklist = Blacklist([x.strip() for x in fp.readlines()])
@@ -234,8 +231,6 @@ def run(args, config):
         cache=cache
     )
     log.debug(f"core created")
-
-
 
 
 def teardown():

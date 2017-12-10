@@ -30,5 +30,5 @@ class Source(ABC):
         return self._namefmt
 
     @abstractmethod
-    def get_posts(self, query: str, alias: Optional[str], lastrun: Optional[date]) -> Generator[Post, None, None]:
+    def get_posts(self, query: str, alias: Optional[str], lastrun=None) -> Generator[Post, None, None]:
         pass

@@ -59,7 +59,7 @@ class ArcturusCore:
         # attributes
         self._pending_downloads = Queue()
 
-    def _get_posts(self) -> Generator[Post]:
+    def _get_posts(self) -> Generator[Post, None, None]:
         for line in self._taglist:
             lastrun = self._lastrun
             if line.ignore_lastrun:
