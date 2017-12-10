@@ -7,8 +7,9 @@ import logging
 from pathlib import Path
 from queue import Queue
 from string import Template
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Generator
 from multiprocessing import Pool
+
 
 import requests
 
@@ -16,6 +17,7 @@ import arcturus.ArcturusSources.Source as Source
 from .import ArcturusSources
 from .Blacklist import Blacklist
 from .Post import Post
+from .Taglist import Query
 
 NAME = "Arcturus"
 
@@ -31,7 +33,7 @@ class ArcturusCore:
 
     def __init__(self,
                  source: Source,
-                 taglist: Iterable[str],
+                 taglist: Iterable[Query],
                  download_dir: Path,
                  lastrun: Optional[datetime.date],
                  blacklist: Optional[Blacklist],
@@ -56,32 +58,28 @@ class ArcturusCore:
 
         # attributes
         self._pending_downloads = Queue()
-        self._update_method = self._get_posts_filtered if self._blacklist else self._get_posts_unfiltered
 
-    def _get_posts_unfiltered(self):
+    def _get_posts(self) -> Generator[Post]:
         for line in self._taglist:
-            for post in self._source.get_posts(query=line):
+            lastrun = self._lastrun
+            if line.ignore_lastrun:
+                lastrun = None
+            for post in self._source.get_posts(query=line.text, alias=line.alias, lastrun=lastrun):
+
+                # these are the individual images / movies / files
+
+                # it has been previously downloaded.  don't download it again
+                if self._cache and post.md5 in self._cache:
+                    continue
+
+                # if we have a blacklist and this shouldn't be downloaded based on it, skip it
+                if self._blacklist and self._blacklist.is_blacklisted(post.tags):
+                    continue
+
                 yield post
 
-    def _get_posts_filtered(self):
-        for line in self._taglist:
-            for post in self._source.get_posts(query=line):
-                if not self._blacklist.is_blacklisted(post.tags):
-                    yield post
-
-    def get_posts(self):
-        if self._cache:
-            for post in self._update_method():
-                if post.md5 in self._cache:
-                    continue
-                else:
-                    self._pending_downloads.put(post)
-
-        else:  # no cache.  just download it all
-            for post in self._update_method():
-                self._pending_downloads.put(post)
-
     def _download_single(self, post: Post):
+
         filename = Template(self._nameformat).substitute(post.__dict__)
         destination = self._download_dir / Path(filename)
         response = requests.get(post.url, stream=True)
@@ -93,6 +91,6 @@ class ArcturusCore:
     def _print_post(self, post: Post):
         print(post.url)
 
-    def download(self, namefmt: Optional[str]):
+    def update(self, namefmt: Optional[str], download_method=_download_single):
         p = Pool(1)
-        p.map(self._print_post, self._pending_downloads)
+        p.map(download_method, self._get_posts())
