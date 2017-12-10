@@ -1,17 +1,16 @@
-import abc
-import datetime
-import typing
-
-from typing import Optional
+from abc import ABC, abstractmethod
+from datetime import date
+from typing import Optional, Generator
 from arcturus.Blacklist import Blacklist
 from arcturus.Post import Post
 
-class Source(abc.ABC):
+class Source(ABC):
     def __init__(self,
-                 date: Optional[datetime.date],
+                 date: Optional[date],
                  blacklist: Optional[Blacklist],
                  username: Optional[str],
-                 password: Optional[str]):
+                 password: Optional[str]
+                 ):
 
         self._date = date
         self._blacklist = blacklist
@@ -30,6 +29,6 @@ class Source(abc.ABC):
     def namefmt(self):
         return self._namefmt
 
-    @abc.abstractmethod
-    def get_posts(self, query: str) -> typing.Iterable[Post]:
+    @abstractmethod
+    def get_posts(self, query: str, alias: Optional[str], lastrun: Optional[date]) -> Generator[Post, None, None]:
         pass
