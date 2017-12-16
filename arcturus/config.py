@@ -8,9 +8,11 @@ this stuff isn't pretty, but it should be fairly stable.
 from jsonschema import Draft4Validator, validators
 from .ArcturusCore import NAME
 import json
-import shutil
 import logging
 import importlib
+from datetime import datetime
+import iso8601
+
 
 def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
     """read and parse the user config.
@@ -28,15 +30,21 @@ def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
                 log.debug(line.rstrip())
 
     except FileNotFoundError:
-        shutil.copyfile(src=default_json_path, dst=config_json_path)
+        with open(default_json_path) as infile:
+            with open(config_json_path, 'w') as outfile:
+                contents = json.load(infile)
+                contents['lastrun'] = datetime.isoformat(datetime.now())
+                json.dump(contents, outfile, indent=4)
         log.warning(f"{config_json_path} was missing and has been created from defaults")
 
     config = json.load(open(config_json_path))
     schema = json.load(open(config_json_schema))
+
     clean_config = validate_json_supply_defaults(obj=config, schema=schema)
 
     site_key = clean_config['site']
 
+    # try to load the site module so we can abort here if it's not supported
     # from .ArcturusSources import site_key
     try:
         clean_config['site'] = importlib.import_module(f'.ArcturusSources.{site_key}', __package__)
@@ -44,9 +52,15 @@ def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
         log.fatal(f"site '{site_key}' is not supported by {NAME}", exc_info=True)
         raise err
 
+    try:
+        clean_config['lastrun'] = iso8601.parse_date(str(clean_config['lastrun']))
+    except iso8601.ParseError as err:
+        log.error(f"couldn't read lastrun field in config file: {str(clean_config['lastrun'])} is not iso8601 format")
+        raise err
+
     log.debug(f"{config_json_path} contents (parsed and validated, with all fields):")
     for key, val in clean_config.items():
-        log.debug("    {:<24} {}".format(key + ':', val))
+        log.debug("    {:<24} {}".format(key + ':', str(val)))
 
     return clean_config
 

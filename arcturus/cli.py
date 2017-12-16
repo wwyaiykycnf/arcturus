@@ -13,6 +13,8 @@ from pathlib import Path
 from shutil import copyfile
 from typing import Optional
 from datetime import datetime
+from jsonschema.exceptions import ValidationError
+from json.decoder import JSONDecodeError
 
 from .ArcturusCore import NAME, ArcturusCore
 from .Blacklist import Blacklist
@@ -193,12 +195,17 @@ def startup() -> {bool, argparse.Namespace, dict}:
     log.debug(">>> arcturus has started")
 
     # open and parse config then add command line args to this as well
-    config = get_config(CONFIG_JSON_NAME, CONFIG_JSON_NAME, CONFIG_DEFAULT_NAME)
+    try:
+        config = get_config(CONFIG_JSON_NAME, CONFIG_SCHEMA_NAME, CONFIG_DEFAULT_NAME)
+    except (ValidationError, JSONDecodeError) as err:
+        log.fatal(f"cannot parse {CONFIG_JSON_NAME}.  if problem persists, try deleting this file and restarting")
+        raise err
+
     config.update(args.__dict__)
 
     # startup returning false means the program is not prepared for start
     ready_to_start = prepare_files(config=config)
-    log.debug(f">>> arcturus initialization done.  ready to start = {str(ready_to_start).upper()}")
+    log.debug(f"initialization completed. ready to start = {str(ready_to_start).upper()}")
 
     return ready_to_start, args, config
 
@@ -220,7 +227,7 @@ def run(args, config):
 
     lastrun = None
     if config.get("lastrun_ignored", False):
-        lastrun = datetime.date(datetime.strptime(config["lastrun_date"], '%Y-%m-%d'))
+        lastrun = datetime.date(datetime.strptime(config["lastrun"], '%Y-%m-%d'))
 
     core = ArcturusCore(
         source=config["site"],
@@ -235,18 +242,14 @@ def run(args, config):
 
 def teardown():
     log = logging.getLogger()
-    log.debug(">>> arcturus has ended")
-
 
 def main():
-    (ready, args, config) = startup()
-
-    if ready:
-        try:
+    try:
+        (ready, args, config) = startup()
+        if ready:
             run(args, config)
-        except Exception as err:
-            log = logging.getLogger()
-            log.fatal(">>> o shit waddup, here come dat exception")
-            log.fatal(err, exc_info=1)
+    except Exception as err:
+        log = logging.getLogger()
+        log.fatal(err, exc_info=1)
 
     teardown()

@@ -47,11 +47,10 @@
             "title": "name format for downloads",
             "type": "string"
         },
-        "lastrun_date": {
-            "default": "2017-01-01",
-            "description": "this is the date that the program was last run.   posts older than this will not be downloaded. must match this format: YYYY-MM-DD",
-            "id": "http://example.com/example.json/properties/lastrun_date",
-            "pattern": "\\d{4}-\\d{2}-\\d{2}",
+        "lastrun": {
+            "default": null,
+            "description": "this is the date that the program was last run.   posts older than this will not be downloaded.  must comply with ISO8601 format",
+            "id": "http://example.com/example.json/properties/lastrun",
             "title": "last run date",
             "type": "string"
         },
@@ -83,7 +82,7 @@
     "required": [
         "blacklist_file",
         "blacklist_ignored",
-        "lastrun_date",
+        "lastrun",
         "lastrun_ignored",
         "download_dir",
         "download_nameformat",
