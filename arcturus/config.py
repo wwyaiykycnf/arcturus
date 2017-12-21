@@ -44,13 +44,7 @@ def get_config(config_json_path, config_json_schema, default_json_path) -> dict:
 
     site_key = clean_config['site']
 
-    # try to load the site module so we can abort here if it's not supported
-    # from .ArcturusSources import site_key
-    try:
-        clean_config['site'] = importlib.import_module(f'.ArcturusSources.{site_key}', __package__)
-    except ModuleNotFoundError as err:
-        log.fatal(f"site '{site_key}' is not supported by {NAME}", exc_info=True)
-        raise err
+
 
     try:
         clean_config['lastrun'] = iso8601.parse_date(str(clean_config['lastrun']))

@@ -4,6 +4,7 @@ import abc
 import datetime
 import io
 import logging
+import importlib
 from pathlib import Path
 from queue import Queue
 from string import Template
@@ -58,6 +59,10 @@ class ArcturusCore:
 
         # attributes
         self._pending_downloads = Queue()
+
+    @classmethod
+    def import_arcturus_source(cls, source_name):
+        return importlib.import_module(f'.ArcturusSources.{source_name}', __package__)
 
     def _get_posts(self) -> Generator[Post, None, None]:
         for line in self._taglist:

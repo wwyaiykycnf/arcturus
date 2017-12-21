@@ -7,7 +7,7 @@ import logging
 import logging.handlers
 import os
 import pathlib
-import pickle
+import json
 
 from pathlib import Path
 from shutil import copyfile
@@ -104,7 +104,7 @@ def setup_logging(debug_output: bool = False, backup_count: int = 10, currentfil
     if os.path.isfile(log_path):
         rotating_file.doRollover()
 
-def mk_file(path: Path, file_desc: str, contents: Optional[Path] = None):
+def mk_file(path: Path, file_desc: str, contents: Optional[str] = None):
     """
     creates a file at path with the supplied contents
     :param path:        path to the file to be created
@@ -114,9 +114,9 @@ def mk_file(path: Path, file_desc: str, contents: Optional[Path] = None):
     """
     path.touch()
 
-
     if contents is not None:
-        copyfile(src=str(contents), dst=str(path))
+        with open(path, 'w') as outfile:
+            outfile.write(contents)
 
     logging.getLogger().debug(f"created {file_desc} at {path}")
 
@@ -153,7 +153,7 @@ def prepare_files(config: dict) -> bool:
     if file_exists(path=cache_path, file_desc="cache"):
         log.debug(f'cache at {str(cache_path)}')
     else:
-        mk_file(cache_path, "cache")
+        mk_file(cache_path, "cache", json.dumps({"cache": []}))
         log.debug(f"cache {str(cache_path)} was not found and has been created")
     if os.name == 'nt':  # set the hidden flag if running on wandows
         ctypes.windll.kernel32.SetFileAttributesW(str(cache_path), 0x02)  # why does it have to be this hard?
@@ -163,7 +163,7 @@ def prepare_files(config: dict) -> bool:
     if file_exists(path=taglist_path, file_desc="taglist"):
         log.debug(f"taglist at {str(taglist_path)}")
     else:
-        mk_file(taglist_path, "taglist", Path('arcturus/resources/taglist_default.txt'))
+        mk_file(taglist_path, "taglist", open('arcturus/resources/taglist_default.txt').read())
         log.warning(f"taglist '{str(taglist_path)}' was not found and an empty template has been created")
         log.warning(f"follow the instructions in this file to add lines, then run the program again")
         success = False
@@ -175,7 +175,7 @@ def prepare_files(config: dict) -> bool:
     else:
         blacklist_path = Path(cwd) / Path(config['blacklist_file'])
         if not file_exists(path=blacklist_path, file_desc="blacklist"):
-            mk_file(blacklist_path, "blacklist", Path('arcturus/resources/blacklist_default.txt'))
+            mk_file(blacklist_path, "blacklist", open('arcturus/resources/blacklist_default.txt').read())
             log.debug(f"blacklist '{str(blacklist_path)}' was not found and has been created from defaults")
         else:
             log.debug(f"blacklist at {str(blacklist_path)}")
@@ -203,6 +203,14 @@ def startup() -> {bool, argparse.Namespace, dict}:
 
     config.update(args.__dict__)
 
+    # try to load the site module so we can abort here if it's not supported
+    # from .ArcturusSources import site_key
+    try:
+        config['site'] = ArcturusCore.import_arcturus_source(config['site'])
+    except ModuleNotFoundError as err:
+        log.fatal(f"site '{site_key}' is not supported by {NAME}", exc_info=True)
+        raise err
+
     # startup returning false means the program is not prepared for start
     ready_to_start = prepare_files(config=config)
     log.debug(f"initialization completed. ready to start = {str(ready_to_start).upper()}")
@@ -221,9 +229,10 @@ def run(args, config):
             blacklist = Blacklist([x.strip() for x in fp.readlines()])
 
     cache = None
-    if config.get("cache_ignored", False):
+    if not config.get("cache_ignored", False):
         with open(DEFAULT_CACHE_NAME) as fp:
-            cache = pickle.load(fp)
+            contents = json.load(fp)
+            cache = set(contents["cache"])
 
     lastrun = None
     if config.get("lastrun_ignored", False):
