@@ -26,6 +26,8 @@ PYTHON_REQUIRED_MAJOR = 3
 PYTHON_REQUIRED_MINOR = 6
 
 
+
+
 class ArcturusError(Exception):
     """base exception class for all Arcturus exceptions"""
 
@@ -97,5 +99,8 @@ class ArcturusCore:
         print(post.url)
 
     def update(self, namefmt: Optional[str], download_method=_download_single):
+        for x in self._get_posts():
+            print(x)
+
         p = Pool(1)
         p.map(download_method, self._get_posts())

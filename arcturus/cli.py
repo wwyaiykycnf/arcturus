@@ -207,6 +207,7 @@ def startup() -> {bool, argparse.Namespace, dict}:
     # from .ArcturusSources import site_key
     try:
         config['site'] = ArcturusCore.import_arcturus_source(config['site'])
+
     except ModuleNotFoundError as err:
         log.fatal(f"site '{site_key}' is not supported by {NAME}", exc_info=True)
         raise err
@@ -238,8 +239,10 @@ def run(args, config):
     if config.get("lastrun_ignored", False):
         lastrun = datetime.date(datetime.strptime(config["lastrun"], '%Y-%m-%d'))
 
+    site_source = config["site"].source()
+
     core = ArcturusCore(
-        source=config["site"],
+        source=site_source,
         taglist=taglist,
         download_dir=config["download_dir"],
         lastrun=lastrun,
@@ -247,6 +250,7 @@ def run(args, config):
         cache=cache
     )
     log.debug(f"core created")
+    core.update(namefmt=config["download_nameformat"])
 
 
 def teardown():

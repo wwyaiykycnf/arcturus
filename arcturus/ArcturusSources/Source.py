@@ -6,10 +6,10 @@ from arcturus.Post import Post
 
 class Source(ABC):
     def __init__(self,
-                 date: Optional[date],
-                 blacklist: Optional[Blacklist],
-                 username: Optional[str],
-                 password: Optional[str]
+                 date: Optional[date] = None,
+                 blacklist: Optional[Blacklist] = None,
+                 username: Optional[str] = None,
+                 password: Optional[str] = None
                  ):
 
         self._date = date
